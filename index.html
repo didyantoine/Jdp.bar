@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🍺 DrinkCount — Compteur de boissons</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0d0d;--surface:#181818;--surface2:#202020;
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.05);
+  --text:#f4efe6;--muted:rgba(244,239,230,0.42);--muted2:rgba(244,239,230,0.22);
+  --amber:#EF9F27;--amber-d:#BA7517;--amber-p:#FAC775;--amber-bg:rgba(239,159,39,0.10);
+  --green:#4ade80;--red:#f87171;--red-bg:rgba(248,113,113,0.12);
+}
+body{font-family:'Space Mono',monospace;background:var(--bg);color:var(--text);min-height:100dvh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+
+/* SCREENS */
+.screen{display:none;width:100%;max-width:440px;padding:1.4rem 1rem 3rem;flex-direction:column;gap:1rem;animation:fadeIn .3s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER */
+header{width:100%;border-bottom:1px solid var(--border);padding:1.4rem 1rem .9rem;text-align:center;flex-shrink:0}
+.logo{font-family:'Syne',sans-serif;font-size:clamp(1.7rem,6.5vw,2.4rem);font-weight:800;color:var(--amber);letter-spacing:-.03em;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.logo-icon{display:inline-block;animation:sway 3s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.tagline{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+.live-dot{display:inline-block;width:5px;height:5px;background:var(--green);border-radius:50%;margin-right:5px;animation:blink 2s infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* JOIN */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.8rem 1.4rem}
+.card-title{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:700;margin-bottom:.35rem}
+.card-sub{font-size:.68rem;color:var(--muted);margin-bottom:1.3rem;line-height:1.65}
+.input-field{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Space Mono',monospace;font-size:.88rem;padding:.82rem 1rem;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.input-field:focus{border-color:var(--amber)}
+.input-field::placeholder{color:var(--muted2)}
+.btn-primary{width:100%;margin-top:.75rem;background:var(--amber);border:none;border-radius:11px;color:#0a0a0a;font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;padding:.95rem;cursor:pointer;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent}
+.btn-primary:active{transform:scale(.97);background:var(--amber-d)}
+.btn-primary:hover:not(:active){background:var(--amber-p)}
+.err{color:var(--red);font-size:.66rem;margin-top:.4rem;min-height:.9rem;letter-spacing:.04em}
+
+/* TOTAL */
+.total-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.8rem 1rem;text-align:center;position:relative;overflow:hidden}
+.total-card::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:280px;height:280px;background:radial-gradient(circle,rgba(239,159,39,.09) 0%,transparent 65%);pointer-events:none}
+.lbl{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+.total-num{font-family:'Syne',sans-serif;font-size:clamp(5rem,22vw,7.5rem);font-weight:800;color:var(--amber);line-height:1;transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
+.total-num.bump{transform:scale(1.09)}
+.total-unit{font-size:.65rem;color:var(--muted);margin-top:.3rem;letter-spacing:.08em}
+
+/* MY ROW */
+.my-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.85rem 1.1rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.my-left .lbl{margin-bottom:3px}
+.my-val{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:700}
+.uid-pill{font-size:.52rem;background:var(--amber-bg);color:var(--amber-p);border:1px solid rgba(239,159,39,.2);border-radius:20px;padding:3px 9px;letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
+
+/* ADD BUTTON */
+.btn-add{background:var(--amber);border:none;border-radius:14px;color:#0a0a0a;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.01em;padding:1.1rem 1.5rem;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;overflow:hidden}
+.btn-add:active{transform:scale(.97);background:var(--amber-d)}
+.btn-add:hover:not(:active){background:var(--amber-p)}
+.btn-add .ico{font-size:1.3rem;line-height:1}
+
+/* RANKING */
+.ranking{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem}
+.rank-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.rank-title{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.rank-n{font-size:.6rem;color:var(--amber)}
+.rank-row{display:flex;align-items:center;gap:7px;padding:.4rem 0;border-top:1px solid var(--border2)}
+.rank-pos{font-size:.62rem;color:var(--muted);min-width:20px;text-align:center}
+.rank-name{flex:1;font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-name.me{color:var(--amber);font-weight:700}
+.bar-wrap{flex:0 0 64px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.bar{height:100%;background:var(--amber);border-radius:2px;transition:width .4s ease}
+.bar.me{background:var(--amber-p)}
+.rank-val{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;min-width:22px;text-align:right}
+.empty{text-align:center;color:var(--muted);font-size:.68rem;padding:.8rem 0;letter-spacing:.06em}
+
+/* ACTIONS */
+.actions{display:flex;gap:.55rem}
+.btn-sm{flex:1;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Space Mono',monospace;font-size:.62rem;padding:.65rem .4rem;cursor:pointer;transition:color .15s,border-color .15s;letter-spacing:.04em;-webkit-tap-highlight-color:transparent}
+.btn-sm.warn:hover{color:var(--amber);border-color:rgba(239,159,39,.3)}
+.btn-sm.danger:hover{color:var(--red);border-color:rgba(248,113,113,.3)}
+
+.status{text-align:center;font-size:.56rem;color:var(--muted2);letter-spacing:.1em;padding:.1rem}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.on{display:flex}
+.modal{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:300px;width:100%;text-align:center;animation:fadeIn .2s ease}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:.4rem}
+.modal-text{font-size:.68rem;color:var(--muted);line-height:1.65;margin-bottom:1.1rem}
+.modal-btns{display:flex;gap:.55rem}
+.m-cancel{flex:1;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Space Mono',monospace;font-size:.7rem;padding:.68rem;cursor:pointer}
+.m-ok{flex:1;background:#7f1d1d;border:none;border-radius:8px;color:#fca5a5;font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;padding:.68rem;cursor:pointer}
+
+/* RIPPLE */
+.ripples{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.ripple{position:absolute;border-radius:50%;background:rgba(239,159,39,.16);animation:rpl .6s ease-out forwards;pointer-events:none;transform:translate(-50%,-50%)}
+@keyframes rpl{from{width:0;height:0;opacity:1}to{width:340px;height:340px;opacity:0}}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.6rem 1.2rem;font-size:.7rem;color:var(--amber);z-index:300;transition:transform .3s ease,opacity .3s ease;opacity:0;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="ripples" id="ripples"></div>
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="mTitle"></div>
+    <div class="modal-text" id="mText"></div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeModal()">Annuler</button>
+      <button class="m-ok" onclick="doModal()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo"><span class="logo-icon">🍺</span>DrinkCount</div>
+  <div class="tagline"><span class="live-dot"></span>Compteur partagé en temps réel</div>
+</header>
+
+<!-- SCREEN: JOIN -->
+<div class="screen active" id="sJoin">
+  <div class="card">
+    <div class="card-title">Bienvenue ! 👋</div>
+    <div class="card-sub">Entrez votre prénom pour rejoindre le compteur partagé avec tous les participants de la soirée.</div>
+    <input class="input-field" id="inputName" type="text" placeholder="Votre prénom…" maxlength="24" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="err" id="joinErr"></div>
+    <button class="btn-primary" onclick="doJoin()">Rejoindre la soirée →</button>
+  </div>
+</div>
+
+<!-- SCREEN: MAIN -->
+<div class="screen" id="sMain">
+
+  <div class="status" id="welcomeRow">— connecté</div>
+
+  <div class="total-card">
+    <div class="lbl">Total verres servis ce soir</div>
+    <div class="total-num" id="totalNum">0</div>
+    <div class="total-unit" id="totalUnit">verre</div>
+  </div>
+
+  <div class="my-row">
+    <div class="my-left">
+      <div class="lbl">Ma session</div>
+      <div class="my-val" id="myCount">0</div>
+    </div>
+    <div class="uid-pill" id="uidPill">—</div>
+  </div>
+
+  <button class="btn-add" id="btnAdd" onclick="addDrink(event)">
+    <span class="ico">🥂</span>Ajouter un verre
+  </button>
+
+  <div class="ranking">
+    <div class="rank-hdr">
+      <div class="rank-title">Classement</div>
+      <div class="rank-n" id="rankN">0 participant(s)</div>
+    </div>
+    <div id="rankList"><div class="empty">Aucun verre encore versé…</div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-sm warn" onclick="askReset('mine')">↩ Mon compteur</button>
+    <button class="btn-sm danger" onclick="askReset('all')">✕ Reset total</button>
+  </div>
+
+  <div class="status" id="statusBar">Initialisation…</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STORAGE KEY — shared across all tabs/devices
+//  on the same browser session (localStorage)
+//  For real multi-device: replace storage layer
+//  with Firebase/Supabase (see README).
+// ═══════════════════════════════════════════════
+const STORE_KEY = 'drinkcount_v3_data';
+const POLL_MS   = 1800;
+const MEDALS    = ['🥇','🥈','🥉'];
+
+let myUid  = null;
+let myName = null;
+let pendingAction = null;
+let prevTotal = 0;
+
+// ── UUID ──────────────────────────────────────
+function getOrMakeUid() {
+  let id = localStorage.getItem('drinkcount_uid');
+  if (!id) {
+    id = 'USR-' + Math.random().toString(36).slice(2,5).toUpperCase()
+            + Math.random().toString(36).slice(2,5).toUpperCase();
+    localStorage.setItem('drinkcount_uid', id);
+  }
+  return id;
+}
+
+// ── DATA STORE ────────────────────────────────
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveData(d) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(d));
+  // Broadcast to other tabs
+  localStorage.setItem(STORE_KEY + '_ping', Date.now());
+}
+function totalCount(d) {
+  return Object.values(d).reduce((s,v) => s + (v.count||0), 0);
+}
+
+// ── JOIN ──────────────────────────────────────
+document.getElementById('inputName').addEventListener('keydown', e => {
+  document.getElementById('joinErr').textContent = '';
+  if (e.key === 'Enter') doJoin();
+});
+
+function doJoin() {
+  const name = document.getElementById('inputName').value.trim();
+  if (!name) { document.getElementById('joinErr').textContent = '✕ Entrez votre prénom.'; return; }
+
+  myUid  = getOrMakeUid();
+  myName = name;
+
+  const data = loadData();
+  if (!data[myUid]) data[myUid] = { name, count: 0, ts: Date.now() };
+  else data[myUid].name = name;
+  saveData(data);
+
+  document.getElementById('welcomeRow').innerHTML =
+    `Connecté en tant que <span style="color:var(--amber);font-weight:700">${esc(name)}</span>`;
+  document.getElementById('uidPill').textContent = myUid;
+
+  document.getElementById('sJoin').classList.remove('active');
+  document.getElementById('sMain').classList.add('active');
+  render(data);
+  startPolling();
+}
+
+// ── ADD DRINK ─────────────────────────────────
+function addDrink(e) {
+  spawnRipple(e);
+  if (!myUid) return;
+  const btn = document.getElementById('btnAdd');
+  btn.disabled = true;
+  setTimeout(() => btn.disabled = false, 400);
+
+  const data = loadData();
+  if (!data[myUid]) data[myUid] = { name: myName, count: 0, ts: Date.now() };
+  data[myUid].count = (data[myUid].count || 0) + 1;
+  saveData(data);
+  render(data);
+  showToast(`+1 verre 🍺  — total : ${totalCount(data)}`);
+}
+
+// ── RENDER ────────────────────────────────────
+function render(data) {
+  const total   = totalCount(data);
+  const myCount = data[myUid] ? (data[myUid].count || 0) : 0;
+  const entries = Object.entries(data).sort((a,b) => (b[1].count||0) - (a[1].count||0));
+  const maxVal  = entries.length ? Math.max(...entries.map(([,v]) => v.count||0), 1) : 1;
+
+  // Total
+  const el = document.getElementById('totalNum');
+  if (total !== prevTotal) { el.classList.add('bump'); setTimeout(()=>el.classList.remove('bump'), 200); }
+  prevTotal = total;
+  el.textContent = total;
+  document.getElementById('totalUnit').textContent = total <= 1 ? 'verre' : 'verres';
+  document.getElementById('myCount').textContent = myCount;
+
+  // Ranking
+  document.getElementById('rankN').textContent = entries.length + ' participant(s)';
+  const list = document.getElementById('rankList');
+  if (!entries.length) { list.innerHTML = '<div class="empty">Aucun verre encore versé…</div>'; }
+  else {
+    list.innerHTML = entries.map(([uid, v], i) => {
+      const pct = Math.round((v.count||0) / maxVal * 100);
+      const isMe = uid === myUid;
+      const medal = i < 3 ? MEDALS[i] : (i+1);
+      return `<div class="rank-row">
+        <div class="rank-pos">${medal}</div>
+        <div class="rank-name${isMe?' me':''}">${esc(v.name||'?')}${isMe?' ✦':''}</div>
+        <div class="bar-wrap"><div class="bar${isMe?' me':''}" style="width:${pct}%"></div></div>
+        <div class="rank-val">${v.count||0}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Status
+  document.getElementById('statusBar').textContent =
+    '⟳ sync · ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── POLLING ───────────────────────────────────
+function startPolling() {
+  setInterval(() => { if (myUid) render(loadData()); }, POLL_MS);
+}
+// Listen for cross-tab changes
+window.addEventListener('storage', e => {
+  if (e.key === STORE_KEY + '_ping' && myUid) render(loadData());
+});
+
+// ── RESET ─────────────────────────────────────
+function askReset(type) {
+  pendingAction = type;
+  const isAll = type === 'all';
+  document.getElementById('mTitle').textContent = isAll ? 'Reset total ?' : 'Mon compteur ?';
+  document.getElementById('mText').textContent  = isAll
+    ? 'Tous les compteurs de tous les participants seront remis à zéro.'
+    : 'Votre compteur personnel sera remis à 0. Les autres ne sont pas affectés.';
+  document.getElementById('overlay').classList.add('on');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('on'); pendingAction=null; }
+function doModal() {
+  closeModal();
+  const data = loadData();
+  if (pendingAction === 'all') {
+    for (const k in data) data[k].count = 0;
+  } else if (pendingAction === 'mine' && myUid && data[myUid]) {
+    data[myUid].count = 0;
+  }
+  saveData(data);
+  render(data);
+  showToast(pendingAction==='all' ? 'Reset total effectué' : 'Votre compteur a été remis à 0');
+}
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeModal();
+});
+
+// ── UTILS ─────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function spawnRipple(e) {
+  const d = document.createElement('div');
+  d.className = 'ripple';
+  d.style.left = e.clientX + 'px';
+  d.style.top  = e.clientY + 'px';
+  document.getElementById('ripples').appendChild(d);
+  setTimeout(() => d.remove(), 620);
+}
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
