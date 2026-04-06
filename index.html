@@ -308,32 +308,6 @@ window.addEventListener('storage', e => {
   if (e.key === STORE_KEY + '_ping' && myUid) render(loadData());
 });
 
-// ── RESET ─────────────────────────────────────
-function askReset(type) {
-  pendingAction = type;
-  const isAll = type === 'all';
-  document.getElementById('mTitle').textContent = isAll ? 'Reset total ?' : 'Mon compteur ?';
-  document.getElementById('mText').textContent  = isAll
-    ? 'Tous les compteurs de tous les participants seront remis à zéro.'
-    : 'Votre compteur personnel sera remis à 0. Les autres ne sont pas affectés.';
-  document.getElementById('overlay').classList.add('on');
-}
-function closeModal() { document.getElementById('overlay').classList.remove('on'); pendingAction=null; }
-function doModal() {
-  closeModal();
-  const data = loadData();
-  if (pendingAction === 'all') {
-    for (const k in data) data[k].count = 0;
-  } else if (pendingAction === 'mine' && myUid && data[myUid]) {
-    data[myUid].count = 0;
-  }
-  saveData(data);
-  render(data);
-  showToast(pendingAction==='all' ? 'Reset total effectué' : 'Votre compteur a été remis à 0');
-}
-document.getElementById('overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('overlay')) closeModal();
-});
 
 // ── UTILS ─────────────────────────────────────
 function esc(s) {
