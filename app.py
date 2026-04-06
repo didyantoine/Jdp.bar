@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = b'drinkcount_secret_2024'
 
-DATA_FILE = "/home/claude/drinkcount/data.json"
+DATA_FILE = "data.json"
 lock = threading.Lock()
 
 def load_data():
